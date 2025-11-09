@@ -15,9 +15,9 @@ Thumbs.db
 .vscode/
 
 # Data & outputs (keep repo light)
-dataset/
-models/*.pt
-models/*.onnx
+# dataset/
+# models/*.pt
+# models/*.onnx
 
 # Logs
 logs/

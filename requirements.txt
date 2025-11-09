@@ -1,0 +1,15 @@
+torch>=2.0
+torchvision>=0.15
+pandas
+numpy
+scikit-learn
+pillow
+albumentations>=1.3.0
+opencv-python
+matplotlib
+tqdm
+torchmetrics
+fastapi
+uvicorn[standard]
+pydantic
+gradio>=4.44.0

@@ -15,9 +15,28 @@ Thumbs.db
 .vscode/
 
 # Data & outputs (keep repo light)
-# dataset/
-# models/*.pt
-# models/*.onnx
+# Large model files
+models/*.pt
+models/*.onnx
+
+# Large datasets and documents
+dataset/train/*.jpg
+dataset/train/*.png
+dataset/train/*.jpeg
+dataset/valid/*.jpg
+dataset/valid/*.png
+dataset/valid/*.jpeg
+dataset/test/*.jpg
+dataset/test/*.png
+dataset/test/*.jpeg
+*.pdf
+*.exe
+*.json
+*.xlsx
+*.txt
+!requirements.txt
+!README.txt
+~$*
 
 # Logs
 logs/

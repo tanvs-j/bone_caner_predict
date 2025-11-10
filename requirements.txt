@@ -11,5 +11,5 @@ tqdm
 torchmetrics
 fastapi
 uvicorn[standard]
-pydantic
-gradio>=4.44.0
+pydantic>=2.0
+gradio

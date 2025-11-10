@@ -76,9 +76,12 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    train_ds = BoneCancerDataset(args.dataset_root, "train", args.labels_csv, img_size=args.img_size, augment=True)
+    train_csv = os.path.join(args.dataset_root, "train", "_classes.csv")
+    valid_csv = os.path.join(args.dataset_root, "valid", "_classes.csv")
+    
+    train_ds = BoneCancerDataset(args.dataset_root, "train", train_csv, img_size=args.img_size, augment=True)
     try:
-        valid_ds = BoneCancerDataset(args.dataset_root, "valid", args.labels_csv, img_size=args.img_size, augment=False)
+        valid_ds = BoneCancerDataset(args.dataset_root, "valid", valid_csv, img_size=args.img_size, augment=False)
         if len(valid_ds) == 0:
             raise RuntimeError("empty valid dataset")
         train_dl = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=Config.num_workers, pin_memory=True)

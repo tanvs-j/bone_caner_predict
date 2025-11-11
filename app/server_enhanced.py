@@ -286,52 +286,9 @@ async def index():
     
     <div class='form-card'>
       <form id="predictionForm">
-        <div class="form-grid">
-          <div class="form-group">
-            <label>📁 X-ray Image</label>
-            <input type="file" id="image" accept="image/*" required />
-          </div>
-          
-          <div class="form-group">
-            <label>👤 Sex</label>
-            <select id="sex">
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label>🎂 Age</label>
-            <input type="number" id="age" value="50" min="1" max="120" required />
-          </div>
-          
-          <div class="form-group">
-            <label>📊 Tumor Grade</label>
-            <select id="grade">
-              <option value="Low">Low</option>
-              <option value="Intermediate" selected>Intermediate</option>
-              <option value="High">High</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label>🧬 Histological Type</label>
-            <select id="histology">
-              <option value="Osteosarcoma">Osteosarcoma</option>
-              <option value="Leiomyosarcoma">Leiomyosarcoma</option>
-              <option value="Liposarcoma">Liposarcoma</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
-        
         <div class="form-group" style="margin-bottom: 1.5rem;">
-          <label>💊 Treatment (select applicable)</label>
-          <div class="checkbox-group">
-            <label><input type="checkbox" id="surgery" value="Surgery"> Surgery</label>
-            <label><input type="checkbox" id="chemo" value="Chemotherapy"> Chemotherapy</label>
-            <label><input type="checkbox" id="radio" value="Radiotherapy"> Radiotherapy</label>
-          </div>
+          <label>📁 Upload X-ray Image for Cancer Detection</label>
+          <input type="file" id="image" accept="image/*" required style="padding: 1rem; font-size: 1rem;" />
         </div>
         
         <button type="submit" class="submit-btn">🔍 Analyze Image</button>
@@ -344,11 +301,12 @@ async def index():
     </div>
     
     <div class="results-container" id="results">
-      <div class="cards-row">
-        <div class="card">
+      <!-- Cancer Detection Card (Always shown) -->
+      <div class="cards-row" id="detectionCard">
+        <div class="card" style="max-width: 500px; margin: 0 auto;">
           <div class="card-header">
             <span class="card-icon">🔬</span>
-            <span class="card-title">Cancer Detection</span>
+            <span class="card-title">Cancer Detection Result</span>
           </div>
           <div class="card-body">
             <div class="metric">
@@ -361,64 +319,69 @@ async def index():
             </div>
           </div>
         </div>
-        
-        <div class="card">
-          <div class="card-header">
-            <span class="card-icon">🎯</span>
-            <span class="card-title">Tumor Analysis</span>
-          </div>
-          <div class="card-body">
-            <div class="metric">
-              <span class="metric-label">Detected Regions</span>
-              <span class="metric-value" id="detectedRegions">0</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Total Affected Area</span>
-              <span class="metric-value" id="affectedArea">0 pixels</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Severity</span>
-              <span class="status-badge severity-low" id="severity">Stage 1 - Low</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-header">
-            <span class="card-icon">🏆</span>
-            <span class="card-title">Survival Prediction</span>
-          </div>
-          <div class="card-body">
-            <div class="metric">
-              <span class="metric-label">Status</span>
-              <span class="metric-value" id="survivalStatus">-</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Estimated Survival</span>
-              <span class="metric-value" id="estimatedSurvival">-</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">Range</span>
-              <span class="metric-value" id="survivalRange">-</span>
-            </div>
-          </div>
-        </div>
       </div>
-      
-      <div class="images-section">
-        <h2>📊 Visual Analysis</h2>
-        <div class="images-grid">
-          <div class="image-container">
-            <h3>Original X-ray</h3>
-            <img id="originalImage" alt="Original" />
+
+      <!-- Additional Analysis (Only shown if cancer detected) -->
+      <div id="cancerDetailsSection" style="display: none; margin-top: 2rem;">
+        <div class="cards-row">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-icon">🎯</span>
+              <span class="card-title">Tumor Analysis</span>
+            </div>
+            <div class="card-body">
+              <div class="metric">
+                <span class="metric-label">Detected Regions</span>
+                <span class="metric-value" id="detectedRegions">0</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Total Affected Area</span>
+                <span class="metric-value" id="affectedArea">0 pixels</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Severity Stage</span>
+                <span class="status-badge severity-low" id="severity">Stage 1 - Low</span>
+              </div>
+            </div>
           </div>
-          <div class="image-container">
-            <h3>Heatmap Analysis</h3>
-            <img id="heatmapImage" alt="Heatmap" />
+          
+          <div class="card">
+            <div class="card-header">
+              <span class="card-icon">⏱️</span>
+              <span class="card-title">Estimated Lifespan</span>
+            </div>
+            <div class="card-body">
+              <div class="metric">
+                <span class="metric-label">Survival Status</span>
+                <span class="metric-value" id="survivalStatus">-</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Estimated Time</span>
+                <span class="metric-value" id="estimatedSurvival">-</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Range</span>
+                <span class="metric-value" id="survivalRange">-</span>
+              </div>
+            </div>
           </div>
-          <div class="image-container">
-            <h3>Detected Regions</h3>
-            <img id="bboxImage" alt="Bounding Boxes" />
+        </div>
+        
+        <div class="images-section">
+          <h2>📊 Detailed Visual Analysis</h2>
+          <div class="images-grid">
+            <div class="image-container">
+              <h3>Original X-ray</h3>
+              <img id="originalImage" alt="Original" />
+            </div>
+            <div class="image-container">
+              <h3>Contrast RGB Highlights</h3>
+              <img id="heatmapImage" alt="Contrast Highlights" />
+            </div>
+            <div class="image-container">
+              <h3>Box Findings</h3>
+              <img id="bboxImage" alt="Bounding Boxes" />
+            </div>
           </div>
         </div>
       </div>
@@ -439,21 +402,11 @@ document.getElementById('predictionForm').addEventListener('submit', async funct
   document.getElementById('loading').style.display = 'block';
   document.getElementById('results').style.display = 'none';
   
-  const treatments = [];
-  if (document.getElementById('surgery').checked) treatments.push('Surgery');
-  if (document.getElementById('chemo').checked) treatments.push('Chemotherapy');
-  if (document.getElementById('radio').checked) treatments.push('Radiotherapy');
-  
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('sex', document.getElementById('sex').value);
-  formData.append('age', document.getElementById('age').value);
-  formData.append('grade', document.getElementById('grade').value);
-  formData.append('treatment', treatments.join(' + '));
-  formData.append('histological_type', document.getElementById('histology').value);
   
   try {
-    const response = await fetch('/predict_survival', { method: 'POST', body: formData });
+    const response = await fetch('/predict', { method: 'POST', body: formData });
     const data = await response.json();
     
     // Hide loading
@@ -465,33 +418,42 @@ document.getElementById('predictionForm').addEventListener('submit', async funct
     cancerStatus.className = 'status-badge ' + (data.cancer_prediction === 'cancer' ? 'status-cancer' : 'status-normal');
     document.getElementById('cancerConfidence').textContent = (data.cancer_probability * 100).toFixed(1) + '%';
     
-    // Update tumor analysis card
-    document.getElementById('detectedRegions').textContent = data.tumor_analysis.detected_regions;
-    document.getElementById('affectedArea').textContent = data.tumor_analysis.tumor_area + ' pixels';
-    const severity = document.getElementById('severity');
-    severity.textContent = data.tumor_analysis.severity;
-    if (data.tumor_analysis.severity.includes('Low')) {
-      severity.className = 'status-badge severity-low';
-    } else if (data.tumor_analysis.severity.includes('Moderate')) {
-      severity.className = 'status-badge severity-moderate';
-    } else {
-      severity.className = 'status-badge severity-high';
-    }
-    
-    // Update survival prediction card
-    document.getElementById('survivalStatus').textContent = data.survival_status;
-    document.getElementById('estimatedSurvival').textContent = 
-      data.estimated_survival.estimated_years + ' years (' + data.estimated_survival.estimated_months + ' months)';
-    document.getElementById('survivalRange').textContent = 
-      data.estimated_survival.lower_bound + '-' + data.estimated_survival.upper_bound + ' months';
-    
-    // Display images
-    document.getElementById('originalImage').src = 'data:image/jpeg;base64,' + data.original_image;
-    document.getElementById('heatmapImage').src = 'data:image/jpeg;base64,' + data.heatmap_image;
-    document.getElementById('bboxImage').src = 'data:image/jpeg;base64,' + data.bbox_image;
-    
-    // Show results
+    // Show results card
     document.getElementById('results').style.display = 'block';
+    
+    // If cancer detected, show additional details
+    if (data.cancer_prediction === 'cancer') {
+      // Update tumor analysis card
+      document.getElementById('detectedRegions').textContent = data.tumor_analysis.detected_regions;
+      document.getElementById('affectedArea').textContent = data.tumor_analysis.tumor_area + ' pixels';
+      const severity = document.getElementById('severity');
+      severity.textContent = data.tumor_analysis.severity;
+      if (data.tumor_analysis.severity.includes('Low')) {
+        severity.className = 'status-badge severity-low';
+      } else if (data.tumor_analysis.severity.includes('Moderate')) {
+        severity.className = 'status-badge severity-moderate';
+      } else {
+        severity.className = 'status-badge severity-high';
+      }
+      
+      // Update survival prediction card
+      document.getElementById('survivalStatus').textContent = data.survival_status;
+      document.getElementById('estimatedSurvival').textContent = 
+        data.estimated_survival.estimated_years + ' years (' + data.estimated_survival.estimated_months + ' months)';
+      document.getElementById('survivalRange').textContent = 
+        data.estimated_survival.lower_bound + '-' + data.estimated_survival.upper_bound + ' months';
+      
+      // Display images
+      document.getElementById('originalImage').src = 'data:image/jpeg;base64,' + data.original_image;
+      document.getElementById('heatmapImage').src = 'data:image/jpeg;base64,' + data.heatmap_image;
+      document.getElementById('bboxImage').src = 'data:image/jpeg;base64,' + data.bbox_image;
+      
+      // Show cancer details section
+      document.getElementById('cancerDetailsSection').style.display = 'block';
+    } else {
+      // Hide cancer details section for normal predictions
+      document.getElementById('cancerDetailsSection').style.display = 'none';
+    }
     
     // Scroll to results
     document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
@@ -506,15 +468,16 @@ document.getElementById('predictionForm').addEventListener('submit', async funct
 """
 
 
-@app.post("/predict_survival")
-async def predict_survival(
-    file: UploadFile = File(...),
-    sex: str = Form(...),
-    age: int = Form(...),
-    grade: str = Form(...),
-    treatment: str = Form(...),
-    histological_type: str = Form(...)
+@app.post("/predict")
+async def predict(
+    file: UploadFile = File(...)
 ):
+    # Use default clinical values for prediction
+    sex = "Male"
+    age = 50
+    grade = "Intermediate"
+    treatment = "Surgery"
+    histological_type = "Osteosarcoma"
     # Read and transform image
     content = await file.read()
     img = Image.open(io.BytesIO(content)).convert("RGB")

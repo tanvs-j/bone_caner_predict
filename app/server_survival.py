@@ -1,5 +1,6 @@
 import os
 import io
+import base64
 import torch
 import uvicorn
 from fastapi import FastAPI, UploadFile, File, Form
@@ -13,6 +14,7 @@ from torch import nn
 
 from src.model import build_model
 from src.survival_model import SurvivalPredictor, ClinicalFeatureEncoder, estimate_survival_months
+from src.visualization import highlight_cancer_region
 
 # Model paths
 SURVIVAL_MODEL_PATH = os.environ.get("SURVIVAL_CKPT", r"T:\bone_can_pre\models\survival_model_best.pt")
@@ -136,6 +138,20 @@ async def index():
     <div id="results">
       <h2>Prediction Results</h2>
       <div id="output"></div>
+      <div id="imageComparison" style="margin-top: 2rem;">
+        <h3>Image Analysis</h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 300px;">
+            <h4>Original X-ray</h4>
+            <img id="originalImage" style="max-width: 100%; border: 2px solid #ddd; border-radius: 4px;" />
+          </div>
+          <div style="flex: 1; min-width: 300px;">
+            <h4>Cancer Regions Highlighted</h4>
+            <img id="highlightedImage" style="max-width: 100%; border: 2px solid #e74c3c; border-radius: 4px;" />
+          </div>
+        </div>
+        <div id="tumorAnalysis" style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-radius: 4px;"></div>
+      </div>
     </div>
   </div>
 
@@ -188,6 +204,30 @@ document.getElementById('predictionForm').addEventListener('submit', async funct
   `;
   
   outputDiv.innerHTML = html;
+  
+  // Display images if available
+  if (data.original_image) {
+    document.getElementById('originalImage').src = 'data:image/jpeg;base64,' + data.original_image;
+  }
+  if (data.highlighted_image) {
+    document.getElementById('highlightedImage').src = 'data:image/jpeg;base64,' + data.highlighted_image;
+  }
+  
+  // Display tumor analysis
+  if (data.tumor_analysis) {
+    const analysis = data.tumor_analysis;
+    let analysisHtml = `
+      <h4>🔬 Tumor Analysis</h4>
+      <p><strong>Stage:</strong> ${analysis.stage}</p>
+      <p><strong>Tumor Area:</strong> ${analysis.tumor_area} pixels</p>
+    `;
+    if (analysis.tumor_blobs > 0) {
+      analysisHtml += `<p><strong>Detected Blobs:</strong> ${analysis.tumor_blobs}</p>`;
+    }
+    analysisHtml += `<p><strong>Analysis Method:</strong> ${analysis.method}</p>`;
+    document.getElementById('tumorAnalysis').innerHTML = analysisHtml;
+  }
+  
   resultsDiv.style.display = 'block';
 });
 </script>
@@ -208,8 +248,9 @@ async def predict_survival(
     # Read and transform image
     content = await file.read()
     img = Image.open(io.BytesIO(content)).convert("RGB")
-    img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    img_tensor = transform(image=img)["image"].unsqueeze(0).to(device)
+    img_np = np.array(img)
+    img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    img_tensor = transform(image=img_bgr)["image"].unsqueeze(0).to(device)
     
     # Encode clinical features
     clinical_data = {
@@ -257,12 +298,30 @@ async def predict_survival(
                 'upper_bound': 0
             }
     
+    # Generate highlighted image with cancer regions
+    highlighted_img, tumor_analysis = highlight_cancer_region(
+        img_np, cancer_prob, method='advanced'
+    )
+    
+    # Convert images to base64 for transmission
+    def img_to_base64(img_array):
+        img_pil = Image.fromarray(img_array.astype(np.uint8))
+        buffer = io.BytesIO()
+        img_pil.save(buffer, format='JPEG', quality=90)
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
+    
+    original_b64 = img_to_base64(img_np)
+    highlighted_b64 = img_to_base64(highlighted_img)
+    
     return {
         "cancer_prediction": cancer_pred,
         "cancer_probability": cancer_prob,
         "survival_status": survival_status,
         "risk_score": risk_score,
-        "estimated_survival": survival_estimate
+        "estimated_survival": survival_estimate,
+        "original_image": original_b64,
+        "highlighted_image": highlighted_b64,
+        "tumor_analysis": tumor_analysis
     }
 
 

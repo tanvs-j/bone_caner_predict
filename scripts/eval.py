@@ -2,10 +2,10 @@ import os
 import argparse
 import numpy as np
 import torch
-from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.metrics import classification_report, roc_auc_score, accuracy_score, precision_score
 from torch.utils.data import DataLoader, Subset
 import numpy as np
-
+import matplotlib.pyplot as plt
 from src.config import Config
 from src.data import BoneCancerDataset
 from src.model import build_model
@@ -59,8 +59,21 @@ def main():
     y_prob = np.concatenate(ps)
     y_pred = np.concatenate(preds)
 
+    acc = accuracy_score(y_true, y_pred)
+    prec = precision_score(y_true, y_pred, pos_label=1, zero_division=0)
+
     print("AUC:", roc_auc_score(y_true, y_prob))
+    print("Accuracy:", round(acc, 4))
+    print("Precision:", round(prec, 4))
     print(classification_report(y_true, y_pred, target_names=["normal","cancer"]))
+
+    plt.figure(figsize=(5, 4))
+    plt.bar(["Accuracy", "Precision"], [acc, prec], color=["steelblue", "orange"])
+    plt.ylim(0.0, 1.0)
+    plt.ylabel("Score")
+    plt.title("Model Accuracy and Precision")
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     main()

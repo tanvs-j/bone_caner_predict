@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 import numpy as np
 import torch
@@ -10,6 +11,8 @@ from torchvision import datasets, transforms
 from sklearn.metrics import classification_report, roc_auc_score, accuracy_score
 from tqdm import tqdm
 import time
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.config import Config
 from src.model import build_model

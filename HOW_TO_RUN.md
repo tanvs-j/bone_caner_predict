@@ -147,7 +147,7 @@ python app/server_survival.py
 $env:PYTHONPATH="T:\bone_can_pre"
 python app/ui.py
 ```
-Access at: **http://localhost:7860**
+Access at: **server calhost:7860**
 
 ---
 

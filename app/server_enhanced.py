@@ -1,6 +1,7 @@
 import os
 import io
 import base64
+import argparse
 import torch
 import uvicorn
 from fastapi import FastAPI, UploadFile, File, Form
@@ -668,14 +669,23 @@ async def predict(
             cancer_probs = torch.softmax(cancer_model(img_tensor), dim=1)[0]
             cancer_prob = cancer_probs[1].item()
             cancer_pred = "cancer" if cancer_prob >= 0.5 else "normal"
-            survival_status = "Unavailable (survival model not trained)"
-            risk_score = 0.0
-            survival_estimate = {
-                'estimated_months': 0,
-                'estimated_years': 0,
-                'lower_bound': 0,
-                'upper_bound': 0
-            }
+            risk_score = (float(cancer_prob) * 2.0) - 1.0
+            if cancer_pred == "normal":
+                status_short = "NED"
+                survival_status = status_names[0]
+            else:
+                if cancer_prob >= 0.85:
+                    status_short = "D"
+                    survival_status = status_names[2]
+                else:
+                    status_short = "AWD"
+                    survival_status = status_names[1]
+            survival_estimate = estimate_survival_months(
+                status_short,
+                risk_score,
+                DEFAULT_CLINICAL['Age'],
+                DEFAULT_CLINICAL['Grade'],
+            )
     
     y_pred = 1 if cancer_pred == "cancer" else 0
     session_acc = None
@@ -731,4 +741,12 @@ async def predict(
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default=os.environ.get("HOST", "0.0.0.0"))
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("PORT", "8000")),
+    )
+    args = parser.parse_args()
+    uvicorn.run(app, host=args.host, port=args.port)
